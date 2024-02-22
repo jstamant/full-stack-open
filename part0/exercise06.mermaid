@@ -1,0 +1,15 @@
+sequenceDiagram
+    actor user as User
+    participant browser as Browser
+    participant server as Server
+
+    user->>browser: Types "Hello, World!" in text input
+    user->>browser: Clicks *save* button
+
+    Note right of browser: The browser adds the user's note to the notes-list in local memory,<br />and clears the text field to show that the note was committed.
+    Note right of browser: The browser re-draws all the notes on the page via the DOM API.<br />The user can now see the new note.
+
+    browser->>+server: POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa<br />Request body: { "content": "Hello, World!", "date": "2024-02-22" }
+    server-->>-browser: 201 Created<br />Response body: { "message": "note created" }
+
+    Note right of browser: Note that the browser does nothing with the response in this specific example,<br />but could easily implement some code to deal with errors
