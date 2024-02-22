@@ -41,3 +41,35 @@ sequenceDiagram
     Note right of browser: The browser executes the callback function that renders the notes
     Note right of browser: The browser now shows all notes on the server,<br />which consequently has the user's added note<br />and any additional notes since the last GET request or refresh
 ```
+
+## Exercise 0.5 - Single-Page App Diagram
+
+This diagram depicts what happens when a user navigates to the
+single-page app version of the notes app at
+[https://studies.cs.helsinki.fi/exampleapp/spa](https://studies.cs.helsinki.fi/exampleapp/spa)
+
+```mermaid
+sequenceDiagram
+    participant browser as Browser
+    participant server as Server
+
+    browser->>+server: GET https://studies.cs.helsinki.fi/exampleapp/spa
+    server-->>-browser: 200 OK - response body: HTML document
+    browser->>+server: GET https://studies.cs.helsinki.fi/exampleapp/main.css
+    server-->>-browser: CSS file
+    browser->>+server: GET https://studies.cs.helsinki.fi/exampleapp/spa.js
+    server-->>-browser: JavaScript file (specifically for the SPA-version of the web app)
+
+    Note right of browser: The browser starts executing the JavaScript code that fetches the JSON from the server
+
+    browser->>+server: GET https://studies.cs.helsinki.fi/exampleapp/data.json
+    server-->>-browser: [{ "content": "Hello, World!", "date": "2024-02-22" }, ... ]
+
+    Note right of browser: The browser executes the callback function that renders the notes
+```
+
+Note that the initial GET request is the same as with the
+traditional-style web app. The real difference between the two web app
+approaches will be seen in the next exercise, where the JavaScript
+will directly manipulate the DOM with data from the server's response
+rather than refresh the whole page.
