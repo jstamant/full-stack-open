@@ -1,5 +1,16 @@
 import { useState } from 'react'
 
+
+const Anecdote = ({text, votes}) => {
+  return (
+    <>
+      <blockquote><em>"{text}"</em></blockquote>
+      <p>This anecdote has {votes} votes.</p>
+    </>
+  )
+}
+
+
 const App = () => {
   const anecdotes = [
     'If it hurts, do it more often.',
@@ -14,6 +25,8 @@ const App = () => {
 
   const [selected, setSelected] = useState(0)
   const [votes, setVotes] = useState(anecdotes.map(() => 0))
+  const [popular, setPopular] = useState(0)
+  const popularAnecdote = (votes[popular] == 0) ? <p>No anecdotes have been voted on.</p> : <Anecdote text={anecdotes[popular]} votes={votes[popular]} />
 
   const selectRandom = () => {
     let newSelection = selected
@@ -25,16 +38,26 @@ const App = () => {
   const addVote = () => {
     const newVotes = [...votes]
     newVotes[selected] += 1
+    // Checks to see if there's a new "most popular" anecdote
+    if (newVotes[selected] >= newVotes[popular]) {
+      setPopular(selected)
+    }
     setVotes(newVotes)
   }
 
   return (
-    <div>
-      <blockquote>{anecdotes[selected]}</blockquote>
-      <p>This anecdote has {votes[selected]} votes.</p>
-      <button onClick={addVote}>Vote</button>
-      <button onClick={selectRandom}>Random Anecdote</button>
-    </div>
+    <>
+      <div>
+        <h1>Anecdote of the day</h1>
+        <Anecdote text={anecdotes[selected]} votes={votes[selected]} />
+        <button onClick={addVote}>Vote</button>
+        <button onClick={selectRandom}>Random Anecdote</button>
+      </div>
+      <div>
+        <h1>Most Popular Anecdote</h1>
+        {popularAnecdote}
+      </div>
+    </>
   )
 }
 
