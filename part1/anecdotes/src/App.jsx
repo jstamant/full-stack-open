@@ -13,6 +13,8 @@ const App = () => {
   ]
 
   const [selected, setSelected] = useState(0)
+  const [votes, setVotes] = useState(anecdotes.map(() => 0))
+
   const selectRandom = () => {
     let newSelection = selected
     // Never selects the same anecdote!
@@ -20,9 +22,17 @@ const App = () => {
     setSelected(newSelection)
   }
 
+  const addVote = () => {
+    const newVotes = [...votes]
+    newVotes[selected] += 1
+    setVotes(newVotes)
+  }
+
   return (
     <div>
-      <p>{anecdotes[selected]}</p>
+      <blockquote>{anecdotes[selected]}</blockquote>
+      <p>This anecdote has {votes[selected]} votes.</p>
+      <button onClick={addVote}>Vote</button>
       <button onClick={selectRandom}>Random Anecdote</button>
     </div>
   )
