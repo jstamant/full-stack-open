@@ -39,6 +39,17 @@ const App = () => {
     }
   }
 
+  const handleDelete = id => {
+    const { name } = persons.find(person => person.id === id)
+    if (window.confirm(`Delete ${name}?`)) {
+    contactService
+      .deleteContact(id)
+      .then(response => {
+        setPersons(persons.filter(person => person.id != id))
+      })
+    }
+  }
+
   return (
     <div>
       <h1>Phonebook App</h1>
@@ -48,7 +59,7 @@ const App = () => {
         number={newNumber} numberOnChange={handleNumberChange}
         buttonClick={handleClick}
       />
-      <ContactList contacts={persons} filter={nameFilter} />
+      <ContactList contacts={persons} filter={nameFilter} onDelete={handleDelete} />
     </div>
   )
 }

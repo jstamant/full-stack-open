@@ -9,8 +9,12 @@ const create = newContact => {
   return axios.post(baseUrl, newContact)
 }
 
+const deleteContact = id => {
+  return axios.delete(`${baseUrl}/${id}`)
+}
+
 const update = (id, newContact) => {
   return axios.put(`${baseUrl}/${id}`, newContact)
 }
 
-export default { getAll, create, update }
+export default { getAll, create, deleteContact, update }
