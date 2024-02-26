@@ -1,5 +1,10 @@
 import { useState } from 'react'
 
+import ContactList from './components/ContactList'
+import Input from './components/Input'
+import Search from './components/Search'
+
+
 const App = () => {
   const [persons, setPersons] = useState([
     { name: 'Arto Hellas', number: '040-123456', id: 1 },
@@ -28,38 +33,14 @@ const App = () => {
 
   return (
     <div>
-      <h1>Phonebook</h1>
-      <p>Search phonebook for name:</p>
-      <input
-        value={nameFilter}
-        onChange={handleNameFilterChange}
+      <h1>Phonebook App</h1>
+      <Search value={nameFilter} onChange={handleNameFilterChange} />
+      <Input
+        name={newName} nameOnChange={handleNameChange}
+        number={newNumber} numberOnChange={handleNumberChange}
+        buttonClick={handleClick}
       />
-      <h2>Add contact</h2>
-      <form>
-        <div>
-          <label>name:</label>
-          <input
-            value={newName}
-            onChange={handleNameChange}
-          />
-        </div>
-        <div>
-          <label>number:</label>
-          <input
-            value={newNumber}
-            onChange={handleNumberChange}
-          />
-        </div>
-        <div>
-          <button type="submit" onClick={handleClick}>add</button>
-        </div>
-      </form>
-      <h2>Numbers</h2>
-      <ul>
-        {persons
-          .filter((person) => person.name.toLowerCase().includes(nameFilter))
-          .map((person) => <li key={person.name}>{person.name} {person.number}</li>)}
-      </ul>
+      <ContactList contacts={persons} filter={nameFilter} />
     </div>
   )
 }
