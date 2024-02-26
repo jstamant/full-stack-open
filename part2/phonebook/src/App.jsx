@@ -1,14 +1,16 @@
-import axios from 'axios'
 import { useState, useEffect } from 'react'
 
 import ContactList from './components/ContactList'
 import Input from './components/Input'
 import Search from './components/Search'
 
+import contactService from './services/contacts'
+
 
 const App = () => {
   useEffect(() => {
-    axios.get('http://localhost:3001/persons')
+    contactService
+      .getAll()
       .then(response => setPersons(response.data))
   }, [])
 
@@ -27,7 +29,8 @@ const App = () => {
       window.alert(`${newName} is already added to the phonebook`)
     } else {
       const record = { name: newName, number: newNumber }
-      axios.post('http://localhost:3001/persons', record)
+      contactService
+        .create(record)
         .then(response => {
           setPersons(persons.concat(response.data))
           setNewName('')
