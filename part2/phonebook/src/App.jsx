@@ -14,8 +14,12 @@ const App = () => {
   const handleClick = (event) => {
     event.preventDefault()
     console.log("clicked! Field value is", newName)
-    setPersons(persons.concat({ name: newName }))
-    setNewName('')
+    if (persons.find(person => person.name === newName)) {
+      window.alert(`${newName} is already added to the phonebook`)
+    } else {
+      setPersons(persons.concat({ name: newName }))
+      setNewName('')
+    }
   }
 
   return (
