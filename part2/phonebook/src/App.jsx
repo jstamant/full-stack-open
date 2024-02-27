@@ -20,6 +20,7 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [nameFilter, setNameFilter] = useState('')
   const [notificationMessage, setNotificationMessage] = useState(null)
+  const [notificationIsError, setNotificationIsError] = useState(false)
 
   const handleNameChange = event => setNewName(event.target.value)
   const handleNumberChange = event => setNewNumber(event.target.value)
@@ -37,6 +38,9 @@ const App = () => {
             displayNotification(`Updated ${response.data.name} successfully`)
             setNewName('')
             setNewNumber('')
+          })
+          .catch(error => {
+            displayNotification(`Error: ${person.name} does not exist, anymore`, error=true)
           })
       }
     } else {
@@ -62,15 +66,16 @@ const App = () => {
     }
   }
 
-  const displayNotification = message => {
+  const displayNotification = (message, error=false) => {
     setNotificationMessage(message)
+    error ? setNotificationIsError(true) : setNotificationIsError(false)
     setTimeout(() => setNotificationMessage(null), 5000)
   }
 
   return (
     <div>
       <h1>Phonebook App</h1>
-      <Notification message={notificationMessage} />
+      <Notification message={notificationMessage} error={notificationIsError} />
       <Search value={nameFilter} onChange={handleNameFilterChange} />
       <Input
         name={newName} nameOnChange={handleNameChange}
