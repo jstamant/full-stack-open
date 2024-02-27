@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 import ContactList from './components/ContactList'
 import Input from './components/Input'
+import Notification from './components/Notification'
 import Search from './components/Search'
 
 import contactService from './services/contacts'
@@ -18,6 +19,7 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [nameFilter, setNameFilter] = useState('')
+  const [notificationMessage, setNotificationMessage] = useState(null)
 
   const handleNameChange = event => setNewName(event.target.value)
   const handleNumberChange = event => setNewNumber(event.target.value)
@@ -32,6 +34,7 @@ const App = () => {
           .update({ ...person, number: newNumber })
           .then(response => {
             setPersons(persons.map(person => person.id !== response.data.id ? person : response.data))
+            displayNotification(`Updated ${response.data.name} successfully`)
             setNewName('')
             setNewNumber('')
           })
@@ -41,6 +44,7 @@ const App = () => {
         .create({ name: newName, number: newNumber })
         .then(response => {
           setPersons(persons.concat(response.data))
+          displayNotification(`Added ${response.data.name} successfully`)
           setNewName('')
           setNewNumber('')
         })
@@ -58,9 +62,15 @@ const App = () => {
     }
   }
 
+  const displayNotification = message => {
+    setNotificationMessage(message)
+    setTimeout(() => setNotificationMessage(null), 5000)
+  }
+
   return (
     <div>
       <h1>Phonebook App</h1>
+      <Notification message={notificationMessage} />
       <Search value={nameFilter} onChange={handleNameFilterChange} />
       <Input
         name={newName} nameOnChange={handleNameChange}
