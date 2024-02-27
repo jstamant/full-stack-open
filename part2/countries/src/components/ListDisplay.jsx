@@ -1,7 +1,6 @@
 import CountryDisplay from './CountryDisplay'
 
-
-const ListDisplay = ({ items, filter }) => {
+const ListDisplay = ({ items, filter, selected, handleSelect }) => {
   if (items.length == 0) {
     return <p>Fetching data, please wait...</p>
   }
@@ -10,10 +9,16 @@ const ListDisplay = ({ items, filter }) => {
     return <p>Too many matches ({filteredItems.length}). Please specify further.</p>
   } else if (filteredItems.length > 1) {
     return (
-      <ul>
-        {filteredItems
-          .map((item) => <li key={item.name.common}>{item.name.common}</li>)}
-      </ul>
+      <>
+        <ul>
+          {filteredItems
+            .map((item) => {
+              const button = <button onClick={() => handleSelect(item.name.common)}>show</button>
+              return <li key={item.name.common}>{item.name.common} {button}</li>}
+            )}
+        </ul>
+        <CountryDisplay country={items.find(country => country.name.common == selected)} />
+      </>
     )
   } else if (filteredItems.length == 1) {
     return <CountryDisplay country={filteredItems[0]} />
