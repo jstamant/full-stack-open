@@ -19,18 +19,26 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [nameFilter, setNameFilter] = useState('')
 
-  const handleNameChange = (event) => setNewName(event.target.value)
-  const handleNumberChange = (event) => setNewNumber(event.target.value)
-  const handleNameFilterChange = (event) => setNameFilter(event.target.value)
+  const handleNameChange = event => setNewName(event.target.value)
+  const handleNumberChange = event => setNewNumber(event.target.value)
+  const handleNameFilterChange = event => setNameFilter(event.target.value)
 
-  const handleClick = (event) => {
+  const handleClick = event => {
     event.preventDefault()
-    if (persons.find(person => person.name === newName)) {
-      window.alert(`${newName} is already added to the phonebook`)
+    const person = persons.find(person => person.name === newName)
+    if (person) {
+      if (window.confirm(`${newName} is already added to the phonebook. Replace the old number with a new one?`)) {
+        contactService
+          .update({ ...person, number: newNumber })
+          .then(response => {
+            setPersons(persons.map(person => person.id !== response.data.id ? person : response.data))
+            setNewName('')
+            setNewNumber('')
+          })
+      }
     } else {
-      const record = { name: newName, number: newNumber }
       contactService
-        .create(record)
+        .create({ name: newName, number: newNumber })
         .then(response => {
           setPersons(persons.concat(response.data))
           setNewName('')
