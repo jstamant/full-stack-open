@@ -108,6 +108,12 @@ describe('POST /api/blogs', () => {
       .get('/api/blogs')
     assert.strictEqual(response.body.length, 7)
   })
+  test('missing likes field will default to zero', async () => {
+    const { body } = await api
+      .post('/api/blogs')
+      .send(newPost)
+    assert.strictEqual(body.likes, 0)
+  })
 })
 
 after(async () => {
