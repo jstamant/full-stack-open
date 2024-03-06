@@ -86,7 +86,8 @@ describe('GET /api/blogs', () => {
 describe('POST /api/blogs', () => {
   const newPost = {
     title: "Test Blog Post Title",
-    author: "Foo Bar"
+    author: "Foo Bar",
+    url: "outgoing url"
   }
   test('operation successful', async () => {
     await api
@@ -113,6 +114,18 @@ describe('POST /api/blogs', () => {
       .post('/api/blogs')
       .send(newPost)
     assert.strictEqual(body.likes, 0)
+  })
+  test('missing title results in 400 Bad Request', async () => {
+    await api
+      .post('/api/blogs')
+      .send({ url: "title is missing" })
+      .expect(400)
+  })
+  test('missing URL results in 400 Bad Request', async () => {
+    await api
+      .post('/api/blogs')
+      .send({ title: "URL is missing" })
+      .expect(400)
   })
 })
 
