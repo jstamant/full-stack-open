@@ -92,3 +92,17 @@ describe('favorite post', () => {
     assert.deepStrictEqual(listHelper.favoriteBlog(sampleList), value)
   })
 })
+
+describe('most blog posts', () => {
+  test('of an empty list', () => {
+    assert.strictEqual(listHelper.mostBlogs([]), undefined)
+  })
+  test('of one single blog post in a list', () => {
+    const value = { author: 'Edsger W. Dijkstra', blogs: 1 }
+    assert.deepStrictEqual(listHelper.mostBlogs([sampleList[1]]), value)
+  })
+  test('of a list of blog posts', () => {
+    const value = { author: 'Robert C. Martin', blogs: 3 }
+    assert.deepStrictEqual(listHelper.mostBlogs(sampleList), value)
+  })
+})
