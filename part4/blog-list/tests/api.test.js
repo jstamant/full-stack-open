@@ -83,6 +83,33 @@ describe('GET /api/blogs', () => {
   })
 })
 
+describe('POST /api/blogs', () => {
+  const newPost = {
+    title: "Test Blog Post Title",
+    author: "Foo Bar"
+  }
+  test('operation successful', async () => {
+    await api
+      .post('/api/blogs')
+      .send(newPost)
+      .expect(201)
+  })
+  test('new post found in database', async () => {
+    const { body } = await api
+      .post('/api/blogs')
+      .send(newPost)
+    assert(await Blog.findById(body.id).exec())
+  })
+  test('total number of posts increased by one', async () => {
+    await api
+      .post('/api/blogs')
+      .send(newPost)
+    const response = await api
+      .get('/api/blogs')
+    assert.strictEqual(response.body.length, 7)
+  })
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
