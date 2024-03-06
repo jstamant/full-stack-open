@@ -129,6 +129,22 @@ describe('POST /api/blogs', () => {
   })
 })
 
+describe('DELETE /api/blogs/:id', () => {
+  const id = '5a422a851b54a676234d17f7'
+  test('succeeds with code 204 No Content', async () => {
+    await api
+      .delete(`/api/blogs/${id}`)
+      .expect(204)
+  })
+  test('removes one post from the database', async () => {
+    await api
+      .delete(`/api/blogs/${id}`)
+    const { body } = await api
+      .get('/api/blogs')
+    assert.strictEqual(body.length, 5)
+  })
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
