@@ -77,6 +77,10 @@ describe('GET /api/blogs', () => {
     const response = await api.get('/api/blogs')
     assert.strictEqual(response.body.length, 6)
   })
+  test('_id fields are transformed to id', async () => {
+    const response = await api.get('/api/blogs')
+    response.body.map((post) => assert('id' in post))
+  })
 })
 
 after(async () => {
