@@ -145,6 +145,23 @@ describe('DELETE /api/blogs/:id', () => {
   })
 })
 
+describe('PUT /api/blogs/:id', () => {
+  const newPost = {
+    id: '5a422a851b54a676234d17f7',
+    title: "Test Blog Post Title",
+    author: "Foo Bar",
+    url: "outgoing url",
+    likes: 20
+  }
+  test('succeeds and responds with the updated post', async () => {
+    const { body } = await api
+      .put(`/api/blogs/${newPost.id}`)
+      .send(newPost)
+      .expect(200)
+    assert.deepStrictEqual(body, newPost)
+  })
+})
+
 after(async () => {
   await mongoose.connection.close()
 })
