@@ -65,7 +65,7 @@ describe('total likes', () => {
   })
 })
 
-describe('favorite post', () => {
+describe('favorite blog', () => {
   test('of an empty list', () => {
     assert.strictEqual(listHelper.favoriteBlog([]), undefined)
   })

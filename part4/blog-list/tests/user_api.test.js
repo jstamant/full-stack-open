@@ -74,7 +74,7 @@ describe(`GET ${baseRoute}`, () => {
   })
   test('_id fields are transformed to id', async () => {
     const response = await api.get(baseRoute)
-    response.body.map((post) => assert('id' in post))
+    response.body.map((blog) => assert('id' in blog))
   })
 })
 

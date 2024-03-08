@@ -61,30 +61,30 @@ const initialData = [
 beforeEach(async () => {
   await Blog.deleteMany({})
   const commits = initialData
-    .map((post) => new Blog(post))
-    .map(async (post) => await post.save())
+    .map((blog) => new Blog(blog))
+    .map(async (blog) => await blog.save())
   await Promise.all(commits)
 })
 
 describe('GET /api/blogs', () => {
-  test('posts are returned as json', async () => {
+  test('blogs are returned as json', async () => {
     await api
       .get('/api/blogs')
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
-  test('correct number of posts', async () => {
+  test('correct number of blogs', async () => {
     const response = await api.get('/api/blogs')
     assert.strictEqual(response.body.length, 6)
   })
   test('_id fields are transformed to id', async () => {
     const response = await api.get('/api/blogs')
-    response.body.map((post) => assert('id' in post))
+    response.body.map((blog) => assert('id' in blog))
   })
 })
 
 describe('POST /api/blogs', () => {
-  const newPost = {
+  const newBlog = {
     title: "Test Blog Post Title",
     author: "Foo Bar",
     url: "outgoing url"
@@ -92,19 +92,19 @@ describe('POST /api/blogs', () => {
   test('operation successful', async () => {
     await api
       .post('/api/blogs')
-      .send(newPost)
+      .send(newBlog)
       .expect(201)
   })
   test('new post found in database', async () => {
     const { body } = await api
       .post('/api/blogs')
-      .send(newPost)
+      .send(newBlog)
     assert(await Blog.findById(body.id).exec())
   })
-  test('total number of posts increased by one', async () => {
+  test('total number of blogs increased by one', async () => {
     await api
       .post('/api/blogs')
-      .send(newPost)
+      .send(newBlog)
     const response = await api
       .get('/api/blogs')
     assert.strictEqual(response.body.length, 7)
@@ -112,7 +112,7 @@ describe('POST /api/blogs', () => {
   test('missing likes field will default to zero', async () => {
     const { body } = await api
       .post('/api/blogs')
-      .send(newPost)
+      .send(newBlog)
     assert.strictEqual(body.likes, 0)
   })
   test('missing title results in 400 Bad Request', async () => {
@@ -136,7 +136,7 @@ describe('DELETE /api/blogs/:id', () => {
       .delete(`/api/blogs/${id}`)
       .expect(204)
   })
-  test('removes one post from the database', async () => {
+  test('removes one blog from the database', async () => {
     await api
       .delete(`/api/blogs/${id}`)
     const { body } = await api
@@ -146,19 +146,19 @@ describe('DELETE /api/blogs/:id', () => {
 })
 
 describe('PUT /api/blogs/:id', () => {
-  const newPost = {
+  const newBlog = {
     id: '5a422a851b54a676234d17f7',
     title: "Test Blog Post Title",
     author: "Foo Bar",
     url: "outgoing url",
     likes: 20
   }
-  test('succeeds and responds with the updated post', async () => {
+  test('succeeds and responds with the updated blog', async () => {
     const { body } = await api
-      .put(`/api/blogs/${newPost.id}`)
-      .send(newPost)
+      .put(`/api/blogs/${newBlog.id}`)
+      .send(newBlog)
       .expect(200)
-    assert.deepStrictEqual(body, newPost)
+    assert.deepStrictEqual(body, newBlog)
   })
 })
 
