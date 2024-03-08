@@ -10,78 +10,70 @@ const app = require('../app')
 const api = supertest(app)
 
 const baseRoute = '/api/blogs'
+const testCredentials = { username: 'username', password: 'password' }
 
 const initialData = [
   {
-    _id: "5a422a851b54a676234d17f7",
     title: "React patterns",
     author: "Michael Chan",
     url: "https://reactpatterns.com/",
-    likes: 7,
-    __v: 0
+    likes: 7
   },
   {
-    _id: "5a422aa71b54a676234d17f8",
     title: "Go To Statement Considered Harmful",
     author: "Edsger W. Dijkstra",
     url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-    likes: 5,
-    __v: 0
+    likes: 5
   },
   {
-    _id: "5a422b3a1b54a676234d17f9",
     title: "Canonical string reduction",
     author: "Edsger W. Dijkstra",
     url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-    likes: 12,
-    __v: 0
+    likes: 12
   },
   {
-    _id: "5a422b891b54a676234d17fa",
     title: "First class tests",
     author: "Robert C. Martin",
     url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-    likes: 10,
-    __v: 0
+    likes: 10
   },
   {
-    _id: "5a422ba71b54a676234d17fb",
     title: "TDD harms architecture",
     author: "Robert C. Martin",
     url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-    likes: 0,
-    __v: 0
+    likes: 0
   },
   {
-    _id: "5a422bc61b54a676234d17fc",
     title: "Type wars",
     author: "Robert C. Martin",
     url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-    likes: 2,
-    __v: 0
+    likes: 2
   }
 ]
 
-const generateUserAndToken = async () => {
-  const sampleUser = {
-    username: 'test',
-    password: 'password'
-  }
-  await api
-    .post('/api/users')
-    .send(sampleUser)
-  const { token } = (await api
+const getAuth = async (credentials) => {
+  const loginResponse = await api
     .post('/api/login')
-    .send(sampleUser))
-    .body
-  return token
+    .send(credentials)
+  return `Bearer ${loginResponse.body.token}`
 }
 
 beforeEach(async () => {
+  await User.deleteMany({})
+  await api
+    .post('/api/users')
+    .send(testCredentials)
+
   await Blog.deleteMany({})
+  const auth = await getAuth(testCredentials)
   const commits = initialData
-    .map((blog) => new Blog(blog))
-    .map(async (blog) => await blog.save())
+    .map((blog) => {
+      return api
+        .post('/api/blogs')
+        .send(blog)
+        .set('Authorization', auth)
+    })
+
   await Promise.all(commits)
 })
 
@@ -108,28 +100,26 @@ describe(`POST ${baseRoute}`, async () => {
     author: "Foo Bar",
     url: "none"
   }
-  const token = await generateUserAndToken()
-  const auth = `Bearer ${token}`
 
   test('operation successful', async () => {
     await api
       .post(baseRoute)
       .send(sampleBlog)
-      .set('Authorization', auth)
+      .set('Authorization', await getAuth(testCredentials))
       .expect(201)
   })
   test('new post found in database', async () => {
     const { body } = await api
       .post(baseRoute)
       .send(sampleBlog)
-      .set('Authorization', auth)
+      .set('Authorization', await getAuth(testCredentials))
     assert(await Blog.findById(body.id).exec())
   })
   test('total number of blogs increased by one', async () => {
     await api
       .post(baseRoute)
       .send(sampleBlog)
-      .set('Authorization', auth)
+      .set('Authorization', await getAuth(testCredentials))
     const response = await api
       .get(baseRoute)
     assert.strictEqual(response.body.length, 7)
@@ -138,35 +128,38 @@ describe(`POST ${baseRoute}`, async () => {
     const { body } = await api
       .post(baseRoute)
       .send(sampleBlog)
-      .set('Authorization', auth)
+      .set('Authorization', await getAuth(testCredentials))
     assert.strictEqual(body.likes, 0)
   })
   test('missing title results in 400 Bad Request', async () => {
     await api
       .post(baseRoute)
       .send({ url: "title is missing" })
-      .set('Authorization', auth)
+      .set('Authorization', await getAuth(testCredentials))
       .expect(400)
   })
   test('missing URL results in 400 Bad Request', async () => {
     await api
       .post(baseRoute)
       .send({ title: "URL is missing" })
-      .set('Authorization', auth)
+      .set('Authorization', await getAuth(testCredentials))
       .expect(400)
   })
 })
 
-describe(`DELETE ${baseRoute}/:id`, () => {
-  const id = '5a422a851b54a676234d17f7'
+describe(`DELETE ${baseRoute}/:id`, async () => {
   test('succeeds with code 204 No Content', async () => {
+    const blog = await Blog.findOne()
     await api
-      .delete(`/api/blogs/${id}`)
+      .delete(`${baseRoute}/${blog.id}`)
+      .set('Authorization', await getAuth(testCredentials))
       .expect(204)
   })
   test('removes one blog from the database', async () => {
+    const blog = await Blog.findOne()
     await api
-      .delete(`/api/blogs/${id}`)
+      .delete(`${baseRoute}/${blog.id}`)
+      .set('Authorization', await getAuth(testCredentials))
     const { body } = await api
       .get(baseRoute)
     assert.strictEqual(body.length, 5)
@@ -174,23 +167,21 @@ describe(`DELETE ${baseRoute}/:id`, () => {
 })
 
 describe(`PUT ${baseRoute}/:id`, async () => {
-  const token = await generateUserAndToken()
-  const auth = `Bearer ${token}`
-
-  const newBlog = {
-    id: '5a422a851b54a676234d17f7',
-    title: "Test Blog Post Title",
-    author: "Foo Bar",
-    url: "outgoing url",
-    likes: 20
-  }
   test('succeeds and responds with the updated blog', async () => {
+    const blog = await Blog.findOne()
+    blog.title = "Test Blog Post Title"
+    blog.author = "Foo Bar"
+    blog.url = "outgoing url"
+    blog.likes = 20
     const { body } = await api
-      .put(`${baseRoute}/${newBlog.id}`)
-      .send(newBlog)
-      .set('Authorization', auth)
+      .put(`${baseRoute}/${blog.id}`)
+      .send(blog)
+      .set('Authorization', await getAuth(testCredentials))
       .expect(200)
-    assert.deepStrictEqual(body, newBlog)
+    assert.strictEqual(body.title, blog.title)
+    assert.strictEqual(body.author, blog.author)
+    assert.strictEqual(body.url, blog.url)
+    assert.strictEqual(body.likes, blog.likes)
   })
 })
 
