@@ -5,6 +5,10 @@ const errorHandler = (error, request, response, next) => {
     return response.status(500).send({ error: `${error.name}: expected 'username' to be unique` })
   } else if (error.name === 'InvalidCredentials') {
     return response.status(401).send({ error: `${error.name}: ${error.message}` })
+  } else if (error.name === 'TokenExpiredError') {
+    return response.status(401).send({ error: `${error.name}: ${error.message}` })
+  } else if (error.name === 'JsonWebTokenError') {
+    return response.status(401).send({ error: `${error.name}: ${error.message}` })
   }
 
   next(error)

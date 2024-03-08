@@ -1,11 +1,15 @@
-const { test, describe, after, beforeEach } = require('node:test')
+const { after, beforeEach, describe, test } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
-const app = require('../app')
-const Blog = require('../models/blog')
 
+const Blog = require('../models/blog')
+const User = require('../models/user')
+
+const app = require('../app')
 const api = supertest(app)
+
+const baseRoute = '/api/blogs'
 
 const initialData = [
   {
@@ -58,6 +62,21 @@ const initialData = [
   }
 ]
 
+const generateUserAndToken = async () => {
+  const sampleUser = {
+    username: 'test',
+    password: 'password'
+  }
+  await api
+    .post('/api/users')
+    .send(sampleUser)
+  const { token } = (await api
+    .post('/api/login')
+    .send(sampleUser))
+    .body
+  return token
+}
+
 beforeEach(async () => {
   await Blog.deleteMany({})
   const commits = initialData
@@ -66,70 +85,79 @@ beforeEach(async () => {
   await Promise.all(commits)
 })
 
-describe('GET /api/blogs', () => {
+describe(`GET ${baseRoute}`, () => {
   test('blogs are returned as json', async () => {
     await api
-      .get('/api/blogs')
+      .get(baseRoute)
       .expect(200)
       .expect('Content-Type', /application\/json/)
   })
   test('correct number of blogs', async () => {
-    const response = await api.get('/api/blogs')
+    const response = await api.get(baseRoute)
     assert.strictEqual(response.body.length, 6)
   })
   test('_id fields are transformed to id', async () => {
-    const response = await api.get('/api/blogs')
+    const response = await api.get(baseRoute)
     response.body.map((blog) => assert('id' in blog))
   })
 })
 
-describe('POST /api/blogs', () => {
-  const newBlog = {
+describe(`POST ${baseRoute}`, async () => {
+  const sampleBlog = {
     title: "Test Blog Post Title",
     author: "Foo Bar",
-    url: "outgoing url"
+    url: "none"
   }
+  const token = await generateUserAndToken()
+  const auth = `Bearer ${token}`
+
   test('operation successful', async () => {
     await api
-      .post('/api/blogs')
-      .send(newBlog)
+      .post(baseRoute)
+      .send(sampleBlog)
+      .set('Authorization', auth)
       .expect(201)
   })
   test('new post found in database', async () => {
     const { body } = await api
-      .post('/api/blogs')
-      .send(newBlog)
+      .post(baseRoute)
+      .send(sampleBlog)
+      .set('Authorization', auth)
     assert(await Blog.findById(body.id).exec())
   })
   test('total number of blogs increased by one', async () => {
     await api
-      .post('/api/blogs')
-      .send(newBlog)
+      .post(baseRoute)
+      .send(sampleBlog)
+      .set('Authorization', auth)
     const response = await api
-      .get('/api/blogs')
+      .get(baseRoute)
     assert.strictEqual(response.body.length, 7)
   })
   test('missing likes field will default to zero', async () => {
     const { body } = await api
-      .post('/api/blogs')
-      .send(newBlog)
+      .post(baseRoute)
+      .send(sampleBlog)
+      .set('Authorization', auth)
     assert.strictEqual(body.likes, 0)
   })
   test('missing title results in 400 Bad Request', async () => {
     await api
-      .post('/api/blogs')
+      .post(baseRoute)
       .send({ url: "title is missing" })
+      .set('Authorization', auth)
       .expect(400)
   })
   test('missing URL results in 400 Bad Request', async () => {
     await api
-      .post('/api/blogs')
+      .post(baseRoute)
       .send({ title: "URL is missing" })
+      .set('Authorization', auth)
       .expect(400)
   })
 })
 
-describe('DELETE /api/blogs/:id', () => {
+describe(`DELETE ${baseRoute}/:id`, () => {
   const id = '5a422a851b54a676234d17f7'
   test('succeeds with code 204 No Content', async () => {
     await api
@@ -140,12 +168,15 @@ describe('DELETE /api/blogs/:id', () => {
     await api
       .delete(`/api/blogs/${id}`)
     const { body } = await api
-      .get('/api/blogs')
+      .get(baseRoute)
     assert.strictEqual(body.length, 5)
   })
 })
 
-describe('PUT /api/blogs/:id', () => {
+describe(`PUT ${baseRoute}/:id`, async () => {
+  const token = await generateUserAndToken()
+  const auth = `Bearer ${token}`
+
   const newBlog = {
     id: '5a422a851b54a676234d17f7',
     title: "Test Blog Post Title",
@@ -155,8 +186,9 @@ describe('PUT /api/blogs/:id', () => {
   }
   test('succeeds and responds with the updated blog', async () => {
     const { body } = await api
-      .put(`/api/blogs/${newBlog.id}`)
+      .put(`${baseRoute}/${newBlog.id}`)
       .send(newBlog)
+      .set('Authorization', auth)
       .expect(200)
     assert.deepStrictEqual(body, newBlog)
   })

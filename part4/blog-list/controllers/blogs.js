@@ -1,19 +1,38 @@
+require('express-async-errors')
+
 const blogRouter = require('express').Router()
+const jwt = require('jsonwebtoken')
+
 const Blog = require('../models/blog')
 const User = require('../models/user')
+
+const getTokenFrom = request => {
+  const auth = request.get('authorization')
+  if (auth && auth.startsWith('Bearer ')) {
+    return auth.replace('Bearer ', '')
+  }
+  return null
+}
 
 blogRouter.get('/', async (request, response) => {
   const blogs = await Blog.find({}).populate('user')
   response.json(blogs)
 })
 
-blogRouter.post('/', async (request, response) => {
+blogRouter.post('/', async (request, response, next) => {
+  const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+  if (!decodedToken.id) {
+    const error = new Error('Token invalid')
+    error.name = 'InvalidCredentials'
+    return next(error)
+  }
+
   if (!request.body.likes)
     request.body.likes = 0
   if (!request.body.title || !request.body.url)
     return response.status(400).end()
   const blog = new Blog(request.body)
-  const user = await User.findOne()
+  const user = await User.findById(decodedToken.id)
   blog.user = user
   const savedBlog = await blog.save()
   user.blogs = user.blogs.concat(savedBlog._id)
