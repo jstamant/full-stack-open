@@ -1,30 +1,22 @@
 require('express-async-errors')
 
 const blogRouter = require('express').Router()
-const jwt = require('jsonwebtoken')
 
 const Blog = require('../models/blog')
 const User = require('../models/user')
 
-blogRouter.get('/', async (request, response) => {
+blogRouter.get('/', async (_request, response) => {
   const blogs = await Blog.find({}).populate('user')
   response.json(blogs)
 })
 
-blogRouter.post('/', async (request, response, next) => {
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    const error = new Error('Token invalid')
-    error.name = 'InvalidCredentials'
-    return next(error)
-  }
-
+blogRouter.post('/', async (request, response) => {
   if (!request.body.likes)
     request.body.likes = 0
   if (!request.body.title || !request.body.url)
     return response.status(400).end()
   const blog = new Blog(request.body)
-  const user = await User.findById(decodedToken.id)
+  const user = await User.findById(request.user.id)
   blog.user = user
   const savedBlog = await blog.save()
   user.blogs = user.blogs.concat(savedBlog._id)
@@ -33,14 +25,8 @@ blogRouter.post('/', async (request, response, next) => {
 })
 
 blogRouter.delete('/:id', async (request, response, next) => {
-  const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  if (!decodedToken.id) {
-    const error = new Error('Token invalid')
-    error.name = 'InvalidCredentials'
-    return next(error)
-  }
   const blog = await Blog.findById(request.params.id).populate('user')
-  if (decodedToken.id !== blog.user._id.toString()) {
+  if (request.user.id !== blog.user._id.toString()) {
     const error = new Error('Incorrect user')
     error.name = 'InvalidCredentials'
     return next(error)

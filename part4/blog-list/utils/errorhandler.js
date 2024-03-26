@@ -8,7 +8,7 @@ const errorHandler = (error, request, response, next) => {
   } else if (error.name === 'TokenExpiredError') {
     return response.status(401).send({ error: `${error.name}: ${error.message}` })
   } else if (error.name === 'JsonWebTokenError') {
-    return response.status(401).send({ error: `${error.name}: ${error.message}` })
+    return response.status(400).send({ error: `${error.name}: ${error.message}` })
   }
 
   next(error)
