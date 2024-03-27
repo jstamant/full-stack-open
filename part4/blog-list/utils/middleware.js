@@ -16,6 +16,10 @@ const userExtractor = (request, _response, next) => {
       error.name = 'InvalidCredentials'
       next(error)
     }
+  } else {
+    const error = new Error('Missing authorization token')
+    error.name = 'InvalidCredentials'
+    next(error)
   }
   next()
 }

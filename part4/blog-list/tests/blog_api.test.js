@@ -145,6 +145,12 @@ describe(`POST ${baseRoute}`, async () => {
       .set('Authorization', await getAuth(testCredentials))
       .expect(400)
   })
+  test('missing token results in 401 Unauthorized', async () => {
+    await api
+      .post(baseRoute)
+      .send(sampleBlog)
+      .expect(401)
+  })
 })
 
 describe(`DELETE ${baseRoute}/:id`, async () => {

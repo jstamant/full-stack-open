@@ -1,6 +1,7 @@
 require('express-async-errors')
 
 const blogRouter = require('express').Router()
+const middleware = require('../utils/middleware')
 
 const Blog = require('../models/blog')
 const User = require('../models/user')
@@ -10,7 +11,7 @@ blogRouter.get('/', async (_request, response) => {
   response.json(blogs)
 })
 
-blogRouter.post('/', async (request, response) => {
+blogRouter.post('/', middleware.userExtractor, async (request, response) => {
   if (!request.body.likes)
     request.body.likes = 0
   if (!request.body.title || !request.body.url)
@@ -24,7 +25,7 @@ blogRouter.post('/', async (request, response) => {
   response.status(201).json(savedBlog)
 })
 
-blogRouter.delete('/:id', async (request, response, next) => {
+blogRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
   const blog = await Blog.findById(request.params.id).populate('user')
   if (request.user.id !== blog.user._id.toString()) {
     const error = new Error('Incorrect user')
